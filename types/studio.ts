@@ -98,3 +98,21 @@ export interface ImageHistoryItem {
   };
   createdAt: number;
 }
+
+export type EnhancementPersona = 'cinematic' | 'concept-art' | 'minimalist' | 'anime' | 'tags';
+
+export interface TextModelOption {
+  id: string;
+  name: string;
+  provider: ProviderType;
+  description: string;
+  badge?: string;
+  isDefault?: boolean;
+}
+
+export interface TextModelConfig {
+  provider: ProviderType;
+  model: string;
+  customModelId?: string;
+  persona: EnhancementPersona;
+}

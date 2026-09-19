@@ -180,61 +180,79 @@ export async function generateWithGemini(options: GeminiGenerateOptions): Promis
 export async function enhancePromptWithGemini(
   apiKey: string,
   userPrompt: string,
-  styleHint?: string
+  styleHint?: string,
+  modelName: string = 'gemini-2.0-flash',
+  persona: string = 'cinematic'
 ): Promise<string> {
   if (!apiKey) {
     throw new Error('Google Gemini API Key is required for prompt enhancement.');
   }
 
-  const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
-  let lastError: Error | null = null;
+  // Clean model identifier: ensure no redundant "models/" prefix
+  const cleanModel = modelName.replace(/^models\//, '').trim() || 'gemini-2.0-flash';
 
-  for (const model of models) {
-    try {
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.trim()}`;
+  let personaGuide = 'Focus on rich visual details, 35mm camera lens specs, dynamic lighting, and atmospheric mood.';
+  if (persona === 'cinematic') {
+    personaGuide = 'Focus on cinematic storytelling, 35mm anamorphic camera optics, volumetric rim lighting, deep shadows, and cinematic color grade.';
+  } else if (persona === 'concept-art') {
+    personaGuide = 'Focus on dramatic worldbuilding, high-concept visual scale, intricate biomechanical textures, and vibrant color dynamics.';
+  } else if (persona === 'minimalist') {
+    personaGuide = 'Focus on clean negative space, raw brutalist or natural textures, overcast soft light, and elegant composition.';
+  } else if (persona === 'anime') {
+    personaGuide = 'Focus on vibrant cel-shading, dynamic camera perspective, glowing rim lighting, and high-fidelity anime art style.';
+  } else if (persona === 'tags') {
+    personaGuide = 'Output a sequence of high-density diffusion comma-separated tags (e.g. masterpiece, highly detailed, dramatic lighting, sharp focus).';
+  }
 
-      const systemInstruction = `You are a world-class AI Image Prompt Engineer.
+  const systemInstruction = `You are an elite AI Image Prompt Engineer.
 Transform the user's idea into an exquisite, highly descriptive text-to-image prompt.
 Rules:
 1. Output ONLY the final enhanced prompt. Do NOT include greetings, intro, quotation marks, or explanations.
-2. Focus on vivid visual elements: subject details, dynamic composition, dramatic lighting (e.g. golden hour, volumetric rays, rim light), depth of field, atmospheric mood, fine textures, and camera lens specs (e.g., 35mm, f/1.8).
+2. ${personaGuide}
 3. If a style hint is provided (${styleHint || 'general'}), weave that aesthetic seamlessly into the composition.
 4. Keep the enhanced prompt under 90 words for maximum diffusion model coherence.`;
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent?key=${apiKey.trim()}`;
+
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: `${systemInstruction}\n\nUser Idea: "${userPrompt}"` }],
         },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: `${systemInstruction}\n\nUser Idea: "${userPrompt}"` }],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 200,
-          },
-        }),
-      });
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 220,
+      },
+    }),
+  });
 
-      if (!response.ok) {
-        const errJson = await response.json().catch(() => ({}));
-        throw new Error(errJson.error?.message || `Gemini API returned ${response.status}`);
+  if (!response.ok) {
+    let errMessage = `Gemini API returned ${response.status}`;
+    try {
+      const errJson = await response.json();
+      if (errJson.error?.message) {
+        errMessage = errJson.error.message;
       }
-
-      const data = await response.json();
-      const enhancedText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-
-      if (enhancedText) {
-        return enhancedText.replace(/^"|"$/g, '').trim();
-      }
-    } catch (err: unknown) {
-      lastError = err instanceof Error ? err : new Error(String(err));
+    } catch {
+      const text = await response.text().catch(() => '');
+      if (text) errMessage = text.slice(0, 300);
     }
+    throw new Error(`Google Gemini (${cleanModel}) error: ${errMessage}`);
   }
 
-  throw lastError || new Error('Failed to enhance prompt with Gemini.');
+  const data = await response.json();
+  const enhancedText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+
+  if (enhancedText) {
+    return enhancedText.replace(/^"|"$/g, '').trim();
+  }
+
+  throw new Error(`No text generated by Google Gemini model "${cleanModel}".`);
 }

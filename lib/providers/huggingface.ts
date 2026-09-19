@@ -166,3 +166,62 @@ export async function generateWithHuggingFace(options: HuggingFaceGenerateOption
     `Hugging Face inference error on "${cleanModel}": ${errorsEncountered.join(' | ')}. Ensure your token has "Make calls to Inference Providers" permission enabled at https://huggingface.co/settings/tokens.`
   );
 }
+
+export async function enhancePromptWithHuggingFace(
+  token: string,
+  userPrompt: string,
+  styleHint?: string,
+  modelName: string = 'meta-llama/Llama-3.3-70B-Instruct',
+  persona: string = 'cinematic'
+): Promise<string> {
+  if (!token || !token.trim()) {
+    throw new Error('Hugging Face Access Token is required for prompt enhancement.');
+  }
+
+  const cleanToken = token.trim();
+  const cleanModel = modelName.trim() || 'meta-llama/Llama-3.3-70B-Instruct';
+
+  let personaGuide = 'Focus on rich visual details, 35mm camera lens specs, dynamic lighting, and atmospheric mood.';
+  if (persona === 'cinematic') {
+    personaGuide = 'Focus on cinematic storytelling, 35mm anamorphic camera optics, volumetric rim lighting, deep shadows, and cinematic color grade.';
+  } else if (persona === 'concept-art') {
+    personaGuide = 'Focus on dramatic worldbuilding, high-concept visual scale, intricate biomechanical textures, and vibrant color dynamics.';
+  } else if (persona === 'minimalist') {
+    personaGuide = 'Focus on clean negative space, raw brutalist or natural textures, overcast soft light, and elegant composition.';
+  } else if (persona === 'anime') {
+    personaGuide = 'Focus on vibrant cel-shading, dynamic camera perspective, glowing rim lighting, and high-fidelity anime art style.';
+  } else if (persona === 'tags') {
+    personaGuide = 'Output a sequence of high-density diffusion comma-separated tags (e.g. masterpiece, highly detailed, dramatic lighting, sharp focus).';
+  }
+
+  const systemMessage = `You are an elite visual director and prompt engineer for state-of-the-art AI image generators (FLUX, Imagen 3, DALL-E 3).
+Transform the user's idea into an exquisite, highly descriptive text-to-image prompt.
+Rules:
+- Return ONLY the enhanced prompt. No commentary, no intro, no surrounding quotes.
+- ${personaGuide}
+- Incorporate the style hint (${styleHint || 'natural realism'}) gracefully.
+- Keep the prompt concise and punchy (under 90 words).`;
+
+  try {
+    const client = new InferenceClient(cleanToken);
+    const response = await client.chatCompletion({
+      model: cleanModel,
+      messages: [
+        { role: 'system', content: systemMessage },
+        { role: 'user', content: userPrompt },
+      ],
+      max_tokens: 220,
+      temperature: 0.7,
+    });
+
+    const text = response.choices?.[0]?.message?.content?.trim();
+    if (text) {
+      return text.replace(/^"|"$/g, '').trim();
+    }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`Hugging Face text model (${cleanModel}) error: ${msg}`);
+  }
+
+  throw new Error(`No text returned by Hugging Face model "${cleanModel}".`);
+}

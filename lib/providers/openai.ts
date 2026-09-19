@@ -121,19 +121,35 @@ export async function generateWithOpenAI(options: OpenAIGenerateOptions): Promis
 export async function enhancePromptWithOpenAI(
   apiKey: string,
   userPrompt: string,
-  styleHint?: string
+  styleHint?: string,
+  modelName: string = 'gpt-4o-mini',
+  persona: string = 'cinematic'
 ): Promise<string> {
   if (!apiKey) {
     throw new Error('OpenAI API Key is required for prompt enhancement.');
   }
 
   const endpoint = 'https://api.openai.com/v1/chat/completions';
+  const cleanModel = modelName.trim() || 'gpt-4o-mini';
+
+  let personaGuide = 'Focus on rich visual details, 35mm camera lens specs, dynamic lighting, and atmospheric mood.';
+  if (persona === 'cinematic') {
+    personaGuide = 'Focus on cinematic storytelling, 35mm anamorphic camera optics, volumetric rim lighting, deep shadows, and cinematic color grade.';
+  } else if (persona === 'concept-art') {
+    personaGuide = 'Focus on dramatic worldbuilding, high-concept visual scale, intricate biomechanical textures, and vibrant color dynamics.';
+  } else if (persona === 'minimalist') {
+    personaGuide = 'Focus on clean negative space, raw brutalist or natural textures, overcast soft light, and elegant composition.';
+  } else if (persona === 'anime') {
+    personaGuide = 'Focus on vibrant cel-shading, dynamic camera perspective, glowing rim lighting, and high-fidelity anime art style.';
+  } else if (persona === 'tags') {
+    personaGuide = 'Output a sequence of high-density diffusion comma-separated tags (e.g. masterpiece, highly detailed, dramatic lighting, sharp focus).';
+  }
 
   const systemMessage = `You are an expert visual director and prompt engineer for state-of-the-art AI image generators (FLUX, Imagen 3, DALL-E 3).
 Enhance the user's idea into a single, breathtaking, descriptive prompt.
 Guidelines:
 - Return ONLY the enhanced prompt. No commentary, no intro, no surrounding quotes.
-- Specify visual details: subject nuances, composition, lighting (cinematic, volumetric, soft golden hour), mood, camera specs (35mm lens, f/1.8 aperture, sharp focus), textures, and color grading.
+- ${personaGuide}
 - Incorporate the style hint (${styleHint || 'natural realism'}) gracefully.
 - Keep the prompt concise and punchy (under 90 words).`;
 
@@ -144,26 +160,35 @@ Guidelines:
       Authorization: `Bearer ${apiKey.trim()}`,
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: cleanModel,
       messages: [
         { role: 'system', content: systemMessage },
         { role: 'user', content: userPrompt },
       ],
       temperature: 0.7,
-      max_tokens: 200,
+      max_tokens: 220,
     }),
   });
 
   if (!response.ok) {
-    const errJson = await response.json().catch(() => ({}));
-    throw new Error(errJson.error?.message || `OpenAI returned status ${response.status}`);
+    let errMessage = `OpenAI returned status ${response.status}`;
+    try {
+      const errJson = await response.json();
+      if (errJson.error?.message) {
+        errMessage = errJson.error.message;
+      }
+    } catch {
+      const text = await response.text().catch(() => '');
+      if (text) errMessage = text.slice(0, 300);
+    }
+    throw new Error(`OpenAI (${cleanModel}) error: ${errMessage}`);
   }
 
   const data = await response.json();
   const text = data.choices?.[0]?.message?.content?.trim();
 
   if (!text) {
-    throw new Error('Failed to retrieve enhanced prompt from OpenAI.');
+    throw new Error(`Failed to retrieve enhanced prompt from OpenAI (${cleanModel}).`);
   }
 
   return text.replace(/^"|"$/g, '').trim();

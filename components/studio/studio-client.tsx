@@ -18,8 +18,9 @@ import {
   DimensionConfig,
   GenerationResponse,
   ImageHistoryItem,
+  TextModelConfig,
 } from '@/types/studio';
-import { MODELS } from '@/lib/constants/models';
+import { MODELS, DEFAULT_TEXT_CONFIG } from '@/lib/constants/models';
 import { Play, Loader2 } from 'lucide-react';
 
 const STORAGE_KEYS_KEY = 'aura_api_keys_v1';
@@ -72,6 +73,10 @@ export function StudioClient() {
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [generationResult, setGenerationResult] = useState<GenerationResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [enhanceError, setEnhanceError] = useState<string | null>(null);
+
+  // Text Model & Prompt Enhancer state
+  const [textModelConfig, setTextModelConfig] = useState<TextModelConfig>(DEFAULT_TEXT_CONFIG);
 
   // Gallery History state
   const [history, setHistory] = useState<ImageHistoryItem[]>([]);
@@ -95,6 +100,11 @@ export function StudioClient() {
         const savedHistory = localStorage.getItem(STORAGE_HISTORY_KEY);
         if (savedHistory) {
           setHistory(JSON.parse(savedHistory));
+        }
+
+        const savedTextConfig = localStorage.getItem('aura_text_model_config');
+        if (savedTextConfig) {
+          setTextModelConfig(JSON.parse(savedTextConfig));
         }
       } catch (e) {
         console.error('Failed to load data from localStorage', e);
@@ -228,14 +238,29 @@ export function StudioClient() {
   const handleEnhancePrompt = async () => {
     if (!prompt.trim()) return;
 
-    // Check if Gemini or OpenAI key is present
-    if (!apiKeys.gemini && !apiKeys.openai) {
+    // Check if key for active text model's provider is present
+    const hasKey = Boolean(
+      (textModelConfig.provider === 'gemini' && apiKeys.gemini) ||
+      (textModelConfig.provider === 'openai' && apiKeys.openai) ||
+      (textModelConfig.provider === 'huggingface' && apiKeys.huggingface)
+    );
+
+    if (!hasKey) {
       setIsSettingsOpen(true);
-      setError('Prompt enhancement requires either a Google Gemini or OpenAI API key. Please configure one in Settings.');
+      setEnhanceError(
+        `Prompt enhancement requires an API key for ${
+          textModelConfig.provider === 'gemini'
+            ? 'Google Gemini'
+            : textModelConfig.provider === 'openai'
+            ? 'OpenAI'
+            : 'Hugging Face'
+        }. Please configure it in Settings.`
+      );
       return;
     }
 
     setIsEnhancing(true);
+    setEnhanceError(null);
 
     try {
       const headers: Record<string, string> = {
@@ -243,6 +268,7 @@ export function StudioClient() {
       };
       if (apiKeys.gemini) headers['x-gemini-key'] = apiKeys.gemini;
       if (apiKeys.openai) headers['x-openai-key'] = apiKeys.openai;
+      if (apiKeys.huggingface) headers['x-hf-token'] = apiKeys.huggingface;
 
       const response = await fetch('/api/enhance-prompt', {
         method: 'POST',
@@ -250,7 +276,10 @@ export function StudioClient() {
         body: JSON.stringify({
           prompt,
           styleHint: selectedStyle !== 'none' ? selectedStyle : undefined,
-          enhancerProvider: apiKeys.gemini ? 'gemini' : 'openai',
+          provider: textModelConfig.provider,
+          model: textModelConfig.model,
+          customModelId: textModelConfig.customModelId,
+          persona: textModelConfig.persona,
         }),
       });
 
@@ -260,9 +289,11 @@ export function StudioClient() {
       }
 
       setPrompt(data.enhancedPrompt);
+      setEnhanceError(null);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to enhance prompt.';
-      setError(msg);
+      setEnhanceError(msg);
+      // NOTE: We intentionally do NOT set canvas error so canvas display remains pristine
     } finally {
       setIsEnhancing(false);
     }
@@ -353,11 +384,28 @@ export function StudioClient() {
               selectedStyle={selectedStyle}
               supportsNegativePrompt={selectedModel.supportsNegativePrompt}
               isEnhancing={isEnhancing}
-              hasEnhancerKey={Boolean(apiKeys.gemini || apiKeys.openai)}
+              hasEnhancerKey={Boolean(
+                (textModelConfig.provider === 'gemini' && apiKeys.gemini) ||
+                  (textModelConfig.provider === 'openai' && apiKeys.openai) ||
+                  (textModelConfig.provider === 'huggingface' && apiKeys.huggingface)
+              )}
+              enhanceError={enhanceError}
+              textModelConfig={textModelConfig}
+              apiKeys={apiKeys}
               onChangePrompt={setPrompt}
               onChangeNegativePrompt={setNegativePrompt}
               onSelectStyle={setSelectedStyle}
+              onChangeTextModelConfig={(cfg) => {
+                setTextModelConfig(cfg);
+                try {
+                  localStorage.setItem('aura_text_model_config', JSON.stringify(cfg));
+                } catch (e) {
+                  console.error('Failed to save text config to localStorage', e);
+                }
+              }}
               onEnhancePrompt={handleEnhancePrompt}
+              onClearEnhanceError={() => setEnhanceError(null)}
+              onOpenSettings={() => setIsSettingsOpen(true)}
             />
 
             {/* Aspect Ratio & Custom Dimensions (W x H) */}
@@ -387,21 +435,21 @@ export function StudioClient() {
             />
 
             {/* GENERATE PRIMARY ACTION BUTTON */}
-            <div className="pt-1">
+            <div className="pt-1.5">
               <Button
                 size="lg"
                 disabled={isGenerating || !prompt.trim()}
                 onClick={handleGenerate}
-                className="w-full h-11 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold text-xs sm:text-sm shadow-[0_4px_20px_rgba(6,182,212,0.25)] hover:shadow-[0_6px_28px_rgba(6,182,212,0.35)] hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+                className="w-full h-12 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm sm:text-base shadow-[0_4px_20px_rgba(6,182,212,0.25)] hover:shadow-[0_6px_28px_rgba(6,182,212,0.35)] hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2.5"
               >
                 {isGenerating ? (
                   <>
-                    <Loader2 className="size-4 animate-spin text-slate-950" />
+                    <Loader2 className="size-5 animate-spin text-slate-950" />
                     <span>Processing Inference...</span>
                   </>
                 ) : (
                   <>
-                    <Play className="size-3.5 fill-current" />
+                    <Play className="size-4 fill-current" />
                     <span>Generate ({selectedModel.name})</span>
                   </>
                 )}

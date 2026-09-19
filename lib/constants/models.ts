@@ -1,4 +1,4 @@
-import { ModelDefinition, StylePreset, AspectRatio, ProviderType } from '@/types/studio';
+import { ModelDefinition, StylePreset, AspectRatio, ProviderType, TextModelOption, TextModelConfig, EnhancementPersona } from '@/types/studio';
 
 export const MODELS: ModelDefinition[] = [
   // Hugging Face Models
@@ -362,4 +362,130 @@ export function getSupportedAspectRatiosForModel(modelId?: string, provider?: Pr
   // For GPT-Image-2.5 and Hugging Face models, return all 7 calibrated ratios
   return ASPECT_RATIOS;
 }
+
+// Text-to-Text / Prompt Enhancement Models
+export const TEXT_GENERATION_MODELS: TextModelOption[] = [
+  // Google Gemini
+  {
+    id: 'gemini-2.0-flash',
+    name: 'Gemini 2.0 Flash',
+    provider: 'gemini',
+    description: 'Next-gen multimodal model with superior prompt engineering intelligence.',
+    badge: 'Fast & Smart',
+    isDefault: true,
+  },
+  {
+    id: 'gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash',
+    provider: 'gemini',
+    description: 'Latest flagship speed tier with high-fidelity visual comprehension.',
+    badge: 'Latest',
+  },
+  {
+    id: 'gemini-1.5-pro',
+    name: 'Gemini 1.5 Pro',
+    provider: 'gemini',
+    description: 'Deep reasoning model for nuanced, atmospheric scene compositions.',
+    badge: 'Deep Reasoning',
+  },
+  {
+    id: 'gemini-1.5-flash-latest',
+    name: 'Gemini 1.5 Flash (Latest)',
+    provider: 'gemini',
+    description: 'Stable 1.5 Flash production endpoint.',
+  },
+
+  // OpenAI
+  {
+    id: 'gpt-4o-mini',
+    name: 'GPT-4o Mini',
+    provider: 'openai',
+    description: 'Fast, cost-efficient, and highly adept at image prompt expansion.',
+    badge: 'Recommended',
+    isDefault: true,
+  },
+  {
+    id: 'gpt-4o',
+    name: 'GPT-4o',
+    provider: 'openai',
+    description: 'Flagship Omni model with deep cinematic and photographic comprehension.',
+    badge: 'Flagship',
+  },
+  {
+    id: 'o3-mini',
+    name: 'o3-mini',
+    provider: 'openai',
+    description: 'High-reasoning model for complex compositions and spatial relationships.',
+    badge: 'Reasoning',
+  },
+  {
+    id: 'gpt-3.5-turbo',
+    name: 'GPT-3.5 Turbo',
+    provider: 'openai',
+    description: 'Legacy high-speed generation endpoint.',
+  },
+
+  // Hugging Face
+  {
+    id: 'meta-llama/Llama-3.3-70B-Instruct',
+    name: 'Llama 3.3 70B Instruct',
+    provider: 'huggingface',
+    description: 'Industry-leading open-weights model with descriptive fluency.',
+    badge: 'Flagship Open',
+    isDefault: true,
+  },
+  {
+    id: 'Qwen/Qwen2.5-72B-Instruct',
+    name: 'Qwen 2.5 72B Instruct',
+    provider: 'huggingface',
+    description: 'Exceptional open model with deep visual and artistic prompt grasp.',
+    badge: 'Top Rated',
+  },
+  {
+    id: 'mistralai/Mistral-7B-Instruct-v0.3',
+    name: 'Mistral 7B Instruct',
+    provider: 'huggingface',
+    description: 'High-speed, compact model for rapid prompt expansion.',
+  },
+];
+
+export interface PersonaItem {
+  id: EnhancementPersona;
+  name: string;
+  description: string;
+}
+
+export const ENHANCEMENT_PERSONAS: PersonaItem[] = [
+  {
+    id: 'cinematic',
+    name: 'Cinematic',
+    description: '35mm lens optics, volumetric rim lighting, deep shadows, cinematic color grade.',
+  },
+  {
+    id: 'concept-art',
+    name: 'Concept Art',
+    description: 'Dramatic worldbuilding, intricate biomechanical textures, dynamic scale.',
+  },
+  {
+    id: 'minimalist',
+    name: 'Minimalist',
+    description: 'Clean negative space, raw textures, overcast soft light, brutalist aesthetics.',
+  },
+  {
+    id: 'anime',
+    name: 'Anime',
+    description: 'Vibrant cel-shading, dynamic camera perspective, glowing rim lighting.',
+  },
+  {
+    id: 'tags',
+    name: 'Booru Tags',
+    description: 'High-density comma-separated diffusion keywords.',
+  },
+];
+
+export const DEFAULT_TEXT_CONFIG: TextModelConfig = {
+  provider: 'gemini',
+  model: 'gemini-2.0-flash',
+  persona: 'cinematic',
+};
 

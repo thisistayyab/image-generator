@@ -61,12 +61,12 @@ export function GalleryHistory({
       <div className="flex h-full w-full max-w-xl flex-col border-l border-border bg-card p-6 text-foreground shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border pb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex size-8 items-center justify-center rounded-md bg-cyan-950/60 text-cyan-300 border border-cyan-500/30">
-              <History className="size-4" />
+          <div className="flex items-center gap-3">
+            <div className="flex size-9 items-center justify-center rounded-lg bg-cyan-950/70 text-cyan-300 border border-cyan-500/40">
+              <History className="size-4.5" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-foreground">Generation History</h2>
+              <h2 className="text-base font-semibold text-foreground">Generation History</h2>
               <p className="text-xs text-muted-foreground">
                 {history.length} {history.length === 1 ? 'item' : 'items'} stored in local browser cache
               </p>
@@ -74,24 +74,24 @@ export function GalleryHistory({
           </div>
           <button
             onClick={onClose}
-            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           >
             <X className="size-4" />
           </button>
         </div>
 
         {/* Filter Toolbar */}
-        <div className="flex items-center justify-between pt-3 pb-2">
-          <div className="flex items-center gap-1">
+        <div className="flex items-center justify-between pt-3.5 pb-2.5">
+          <div className="flex items-center gap-1.5">
             {['all', 'huggingface', 'gemini', 'openai'].map((p) => (
               <button
                 key={p}
                 type="button"
                 onClick={() => setFilterProvider(p)}
-                className={`rounded px-2.5 py-1 text-xs font-medium capitalize transition-all ${
+                className={`h-8 rounded-md px-3 text-xs font-semibold capitalize transition-all ${
                   filterProvider === p
-                    ? 'bg-cyan-500 text-slate-950 font-semibold shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 }`}
               >
                 {p === 'all' ? 'All' : p}
@@ -102,11 +102,11 @@ export function GalleryHistory({
           {history.length > 0 && (
             <Button
               variant="ghost"
-              size="xs"
+              size="sm"
               onClick={onClearHistory}
-              className="h-6 text-xs text-muted-foreground hover:bg-red-500/10 hover:text-red-400"
+              className="h-8 px-2.5 text-xs text-muted-foreground hover:bg-red-500/10 hover:text-red-400"
             >
-              <Trash2 className="size-3 mr-1" />
+              <Trash2 className="size-3.5 mr-1" />
               <span>Clear</span>
             </Button>
           )}
@@ -115,17 +115,17 @@ export function GalleryHistory({
         {/* Gallery Grid */}
         <div className="flex-1 overflow-y-auto pr-1 py-2">
           {filteredHistory.length === 0 ? (
-            <div className="flex h-48 flex-col items-center justify-center space-y-2 rounded border border-dashed border-border p-6 text-center text-muted-foreground">
-              <p className="text-xs">No historical items found.</p>
+            <div className="flex h-52 flex-col items-center justify-center space-y-2 rounded-lg border border-dashed border-border p-6 text-center text-muted-foreground">
+              <p className="text-xs sm:text-sm">No historical items found.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-2">
               {filteredHistory.map((item) => (
                 <div
                   key={item.id}
-                  className="group relative overflow-hidden rounded-md border border-border bg-background p-2 transition-all hover:border-cyan-500/40"
+                  className="group relative overflow-hidden rounded-lg border border-border bg-background p-2.5 transition-all hover:border-cyan-500/40"
                 >
-                  <div className="relative aspect-square w-full overflow-hidden rounded bg-card">
+                  <div className="relative aspect-square w-full overflow-hidden rounded-md bg-card">
                     <img
                       src={item.imageUrl}
                       alt={item.prompt}
@@ -133,58 +133,58 @@ export function GalleryHistory({
                     />
 
                     {/* Action overlay on thumbnail */}
-                    <div className="absolute inset-0 flex flex-col justify-between bg-black/80 p-2 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-                      <div className="flex justify-end gap-1">
+                    <div className="absolute inset-0 flex flex-col justify-between bg-black/80 p-2.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+                      <div className="flex justify-end gap-1.5">
                         <button
                           type="button"
                           onClick={() => handleDownload(item)}
                           title="Download"
-                          className="rounded border border-border bg-card p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                          className="rounded-md border border-border bg-card p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                         >
-                          <Download className="size-3" />
+                          <Download className="size-3.5" />
                         </button>
                         <button
                           type="button"
                           onClick={() => onDeleteHistoryItem(item.id)}
                           title="Delete"
-                          className="rounded border border-border bg-card p-1 text-muted-foreground hover:bg-muted hover:text-red-400"
+                          className="rounded-md border border-border bg-card p-1.5 text-muted-foreground hover:bg-muted hover:text-red-400"
                         >
-                          <Trash2 className="size-3" />
+                          <Trash2 className="size-3.5" />
                         </button>
                       </div>
 
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between font-mono text-[10px] text-muted-foreground">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between font-mono text-xs text-muted-foreground font-medium">
                           <span className="capitalize">{item.provider}</span>
                           <span>
                             {item.parameters.dimensions.width}×{item.parameters.dimensions.height}
                           </span>
                         </div>
                         <Button
-                          size="xs"
+                          size="sm"
                           onClick={() => {
                             onSelectRemix(item);
                             onClose();
                           }}
-                          className="h-6 w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-[11px] font-semibold shadow-sm"
+                          className="h-7.5 w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold shadow-sm"
                         >
-                          <RotateCcw className="size-2.5 mr-1" />
+                          <RotateCcw className="size-3 mr-1.5" />
                           <span>Load Settings</span>
                         </Button>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-2 space-y-1 px-0.5">
-                    <p className="line-clamp-2 text-[11px] text-foreground leading-tight">
+                  <div className="mt-2.5 space-y-1 px-0.5">
+                    <p className="line-clamp-2 text-xs text-foreground leading-snug">
                       {item.prompt}
                     </p>
-                    <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono">
-                      <span className="truncate max-w-[110px] text-cyan-400">{item.model}</span>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground font-mono">
+                      <span className="truncate max-w-[120px] text-cyan-400 font-medium">{item.model}</span>
                       <button
                         type="button"
                         onClick={() => handleCopyPrompt(item.id, item.prompt)}
-                        className="text-muted-foreground hover:text-foreground"
+                        className="text-muted-foreground hover:text-foreground transition-colors"
                       >
                         {copiedPromptId === item.id ? 'Copied' : 'Copy'}
                       </button>

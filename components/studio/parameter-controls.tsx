@@ -49,40 +49,45 @@ export function ParameterControls({
   const isOpenAi = provider === 'openai';
 
   return (
-    <div className="rounded-lg border border-border bg-card transition-all">
+    <div className="rounded-xl border border-border bg-card transition-all">
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between p-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground"
+        className="flex w-full items-center justify-between p-4 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
       >
-        <div className="flex items-center gap-1.5">
-          <Sliders className="size-3.5 text-muted-foreground" />
+        <div className="flex items-center gap-2">
+          <Sliders className="size-4 text-cyan-400" />
           <span>Inference Parameters</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-[11px] text-muted-foreground font-normal">
+        <div className="flex items-center gap-2.5">
+          <span className="font-mono text-xs text-muted-foreground font-medium bg-muted/60 px-2.5 py-1 rounded-md border border-border/70">
             {isHf ? `Steps: ${numInferenceSteps} | CFG: ${guidanceScale}` : isOpenAi ? `Quality: ${quality}` : 'Standard'}
           </span>
-          {isOpen ? <ChevronUp className="size-3.5 text-muted-foreground" /> : <ChevronDown className="size-3.5 text-muted-foreground" />}
+          {isOpen ? <ChevronUp className="size-4 text-muted-foreground" /> : <ChevronDown className="size-4 text-muted-foreground" />}
         </div>
       </button>
 
       {isOpen && (
-        <div className="space-y-4 border-t border-border p-4 pt-3 text-xs">
+        <div className="space-y-4 border-t border-border p-4 sm:p-5 pt-3.5">
           {/* Hugging Face Diffusion Parameters */}
           {isHf && (
             <>
               {/* Inference Steps */}
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="font-medium text-foreground">
-                    Steps ({numInferenceSteps})
-                  </label>
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs sm:text-sm font-semibold text-foreground">
+                      Inference Steps
+                    </label>
+                    <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-muted/70 text-cyan-300 border border-border">
+                      {numInferenceSteps}
+                    </span>
+                  </div>
                   {model.recommendedSteps && (
                     <button
                       type="button"
                       onClick={() => onChangeSteps(model.recommendedSteps || 25)}
-                      className="text-[11px] text-cyan-400 hover:text-cyan-300 hover:underline"
+                      className="text-xs font-medium text-cyan-400 hover:text-cyan-300 hover:underline transition-colors"
                     >
                       Reset default ({model.recommendedSteps})
                     </button>
@@ -95,26 +100,31 @@ export function ParameterControls({
                   step={1}
                   value={numInferenceSteps}
                   onChange={(e) => onChangeSteps(Number(e.target.value))}
-                  className="w-full accent-cyan-400"
+                  className="w-full h-2 rounded-lg accent-cyan-400 cursor-pointer bg-muted"
                 />
-                <div className="flex justify-between font-mono text-[10px] text-muted-foreground">
+                <div className="flex justify-between font-mono text-xs text-muted-foreground">
                   <span>1 (Draft)</span>
                   <span>25 (Balanced)</span>
-                  <span>50 (High)</span>
+                  <span>50 (High Quality)</span>
                 </div>
               </div>
 
               {/* Guidance Scale */}
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="font-medium text-foreground">
-                    CFG Scale ({guidanceScale})
-                  </label>
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs sm:text-sm font-semibold text-foreground">
+                      Guidance Scale (CFG)
+                    </label>
+                    <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-muted/70 text-cyan-300 border border-border">
+                      {guidanceScale}
+                    </span>
+                  </div>
                   {model.recommendedGuidance && (
                     <button
                       type="button"
                       onClick={() => onChangeGuidance(model.recommendedGuidance || 7.5)}
-                      className="text-[11px] text-cyan-400 hover:text-cyan-300 hover:underline"
+                      className="text-xs font-medium text-cyan-400 hover:text-cyan-300 hover:underline transition-colors"
                     >
                       Reset default ({model.recommendedGuidance})
                     </button>
@@ -127,12 +137,12 @@ export function ParameterControls({
                   step={0.5}
                   value={guidanceScale}
                   onChange={(e) => onChangeGuidance(Number(e.target.value))}
-                  className="w-full accent-cyan-400"
+                  className="w-full h-2 rounded-lg accent-cyan-400 cursor-pointer bg-muted"
                 />
-                <div className="flex justify-between font-mono text-[10px] text-muted-foreground">
+                <div className="flex justify-between font-mono text-xs text-muted-foreground">
                   <span>1.0 (Creative)</span>
                   <span>7.5 (Standard)</span>
-                  <span>20.0 (Strict)</span>
+                  <span>20.0 (Strict Prompt)</span>
                 </div>
               </div>
             </>
@@ -140,14 +150,14 @@ export function ParameterControls({
 
           {/* OpenAI GPT-Image-2.5 Controls */}
           {isOpenAi && model.id.startsWith('gpt-image-2.5') && (
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                <label className="font-medium text-foreground">Rendering Quality</label>
-                <span className="font-mono text-[11px] text-cyan-400 capitalize">
+                <label className="text-xs sm:text-sm font-semibold text-foreground">Rendering Quality</label>
+                <span className="font-mono text-xs font-semibold text-cyan-300 bg-cyan-950/60 px-2 py-0.5 rounded-md border border-cyan-500/40 capitalize">
                   {quality === 'standard' || quality === 'hd' ? 'high' : quality}
                 </span>
               </div>
-              <div className="grid grid-cols-6 gap-1 rounded-md bg-muted/50 p-1 border border-border">
+              <div className="grid grid-cols-6 gap-1 rounded-lg bg-muted/60 p-1 border border-border">
                 {(['low', 'medium', 'high', 'xhigh', 'max', 'auto'] as const).map((tier) => {
                   const isActive = quality === tier || (tier === 'high' && (quality === 'standard' || quality === 'hd'));
                   return (
@@ -155,8 +165,8 @@ export function ParameterControls({
                       key={tier}
                       type="button"
                       onClick={() => onChangeQuality(tier)}
-                      className={`rounded py-1 text-center font-mono text-[11px] font-medium transition-all ${
-                        isActive ? 'bg-cyan-500 text-slate-950 font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                      className={`h-8 rounded-md text-center font-mono text-xs font-semibold flex items-center justify-center transition-all ${
+                        isActive ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
                       }`}
                     >
                       {tier}
@@ -164,7 +174,7 @@ export function ParameterControls({
                   );
                 })}
               </div>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 &apos;max&apos; or &apos;xhigh&apos; is recommended for Sunburst production assets; &apos;high&apos; for Flare.
               </p>
             </div>
@@ -173,14 +183,14 @@ export function ParameterControls({
           {/* OpenAI DALL-E 3 Legacy Controls */}
           {isOpenAi && model.id === 'dall-e-3' && (
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="font-medium text-foreground">Quality</label>
-                <div className="flex rounded-md bg-muted/50 p-0.5 border border-border">
+              <div className="space-y-2">
+                <label className="text-xs sm:text-sm font-semibold text-foreground">Quality</label>
+                <div className="flex rounded-lg bg-muted/60 p-1 border border-border">
                   <button
                     type="button"
                     onClick={() => onChangeQuality('standard')}
-                    className={`flex-1 rounded py-1 text-center text-xs font-medium transition-all ${
-                      quality === 'standard' ? 'bg-cyan-500 text-slate-950 font-semibold' : 'text-muted-foreground'
+                    className={`flex-1 h-8 rounded-md text-center text-xs sm:text-sm font-semibold flex items-center justify-center transition-all ${
+                      quality === 'standard' ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm' : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     Standard
@@ -188,8 +198,8 @@ export function ParameterControls({
                   <button
                     type="button"
                     onClick={() => onChangeQuality('hd')}
-                    className={`flex-1 rounded py-1 text-center text-xs font-medium transition-all ${
-                      quality === 'hd' ? 'bg-cyan-500 text-slate-950 font-semibold' : 'text-muted-foreground'
+                    className={`flex-1 h-8 rounded-md text-center text-xs sm:text-sm font-semibold flex items-center justify-center transition-all ${
+                      quality === 'hd' ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm' : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     HD
@@ -197,14 +207,14 @@ export function ParameterControls({
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="font-medium text-foreground">Visual Style</label>
-                <div className="flex rounded-md bg-muted/50 p-0.5 border border-border">
+              <div className="space-y-2">
+                <label className="text-xs sm:text-sm font-semibold text-foreground">Visual Style</label>
+                <div className="flex rounded-lg bg-muted/60 p-1 border border-border">
                   <button
                     type="button"
                     onClick={() => onChangeStyle('vivid')}
-                    className={`flex-1 rounded py-1 text-center text-xs font-medium transition-all ${
-                      style === 'vivid' ? 'bg-cyan-500 text-slate-950 font-semibold' : 'text-muted-foreground'
+                    className={`flex-1 h-8 rounded-md text-center text-xs sm:text-sm font-semibold flex items-center justify-center transition-all ${
+                      style === 'vivid' ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm' : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     Vivid
@@ -212,8 +222,8 @@ export function ParameterControls({
                   <button
                     type="button"
                     onClick={() => onChangeStyle('natural')}
-                    className={`flex-1 rounded py-1 text-center text-xs font-medium transition-all ${
-                      style === 'natural' ? 'bg-cyan-500 text-slate-950 font-semibold' : 'text-muted-foreground'
+                    className={`flex-1 h-8 rounded-md text-center text-xs sm:text-sm font-semibold flex items-center justify-center transition-all ${
+                      style === 'natural' ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm' : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     Natural
@@ -226,13 +236,13 @@ export function ParameterControls({
           {/* Seed Control */}
           <div className="space-y-2 border-t border-border pt-3">
             <div className="flex items-center justify-between">
-              <label className="font-medium text-foreground">Seed</label>
-              <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-muted-foreground">
+              <label className="text-xs sm:text-sm font-semibold text-foreground">Seed</label>
+              <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-muted-foreground">
                 <input
                   type="checkbox"
                   checked={randomSeed}
                   onChange={(e) => onToggleRandomSeed(e.target.checked)}
-                  className="rounded border-border bg-background text-cyan-400 accent-cyan-400"
+                  className="size-3.5 rounded border-border bg-background text-cyan-400 accent-cyan-400"
                 />
                 <span>Randomize</span>
               </label>
@@ -247,15 +257,15 @@ export function ParameterControls({
                   value={seed || 0}
                   onChange={(e) => onChangeSeed(Number(e.target.value))}
                   placeholder="Fixed Seed Number"
-                  className="w-full rounded border border-border bg-background px-2.5 py-1.5 font-mono text-xs text-foreground focus:border-cyan-500 focus:outline-none"
+                  className="h-10 w-full rounded-lg border border-border bg-background px-3 font-mono text-xs sm:text-sm text-foreground focus:border-cyan-500 focus:outline-none"
                 />
                 <button
                   type="button"
                   onClick={() => onChangeSeed(Math.floor(Math.random() * 2147483647))}
-                  className="rounded border border-border bg-card p-2 text-muted-foreground hover:bg-muted hover:border-cyan-500/30 hover:text-foreground"
+                  className="h-10 w-10 shrink-0 flex items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:bg-muted hover:border-cyan-500/40 hover:text-foreground transition-colors"
                   title="Generate Random Seed"
                 >
-                  <Dice5 className="size-3.5 text-muted-foreground" />
+                  <Dice5 className="size-4 text-muted-foreground" />
                 </button>
               </div>
             )}
